@@ -97,10 +97,11 @@ namespace LethalLike.Gameplay
         private IEnumerator AmbushAttackRoutine(PlayerHealth target)
         {
             SetState(EnemyState.Chase);
+            float safeRevealDuration = Mathf.Max(0f, revealDuration);
             float revealStartTime = Time.time;
-            while (Time.time - revealStartTime < revealDuration)
+            while (safeRevealDuration > 0f && Time.time - revealStartTime < safeRevealDuration)
             {
-                float t = (Time.time - revealStartTime) / Mathf.Max(0.01f, revealDuration);
+                float t = Mathf.Clamp01((Time.time - revealStartTime) / safeRevealDuration);
                 SetVisualScale(Vector3.Lerp(hiddenScale, exposedScale, t));
                 yield return null;
             }
@@ -115,10 +116,11 @@ namespace LethalLike.Gameplay
                 destination = target.transform.position;
             }
 
+            float safeLungeDuration = Mathf.Max(0f, lungeDuration);
             float lungeStartTime = Time.time;
-            while (Time.time - lungeStartTime < lungeDuration)
+            while (safeLungeDuration > 0f && Time.time - lungeStartTime < safeLungeDuration)
             {
-                float t = (Time.time - lungeStartTime) / Mathf.Max(0.01f, lungeDuration);
+                float t = Mathf.Clamp01((Time.time - lungeStartTime) / safeLungeDuration);
                 transform.position = Vector3.Lerp(startPosition, destination, t);
                 yield return null;
             }
