@@ -21,6 +21,7 @@ namespace LethalLike.Gameplay
         [SerializeField] private TeamScoreManager teamScoreManager;
         [SerializeField] private PlayerHealth playerHealth;
         [SerializeField] private MonoBehaviour reviveServiceProvider;
+        [SerializeField] private ThreatManager threatManager;
 
         [Header("Audio Hooks")]
         [SerializeField] private AudioSource audioSource;
@@ -116,7 +117,9 @@ namespace LethalLike.Gameplay
         {
             int delivered = teamScoreManager != null ? teamScoreManager.DeliveredSeedCount : 0;
             int score = teamScoreManager != null ? teamScoreManager.Score : 0;
-            return $"State: {CurrentState}\nTime: {TimeRemaining:F1}\nDelivered: {delivered}\nScore: {score}\nReason: {_endReason}";
+            int carriedValue = threatManager != null ? threatManager.CurrentCarriedSeedValue : 0;
+            int currentThreat = threatManager != null ? threatManager.CurrentThreat : 0;
+            return $"State: {CurrentState}\nTime: {TimeRemaining:F1}\nDelivered: {delivered}\nScore: {score}\nCarry Value: {carriedValue}\nThreat: {currentThreat}\nReason: {_endReason}";
         }
 
         private void HandlePlayerDied()

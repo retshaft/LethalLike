@@ -4,7 +4,7 @@ using UnityEngine.AI;
 
 namespace LethalLike.Gameplay
 {
-    public class PlantEnemyAI : MonoBehaviour
+    public class SporeEnemyAI : MonoBehaviour
     {
         private enum EnemyState
         {
@@ -15,40 +15,36 @@ namespace LethalLike.Gameplay
         }
 
         [Header("Combat")]
-        [SerializeField] private float detectRange = 12f;
-        [SerializeField] private float detectRangePerThreat = 0.25f;
-        [SerializeField] private float attackRange = 1.8f;
-        [SerializeField] private float attackDamage = 10f;
-        [SerializeField] private float attackCooldown = 1.5f;
-        [SerializeField] private LayerMask attackMask = ~0;
+        [SerializeField] private float detectRange = 14f;
+        [SerializeField] private float detectRangePerThreat = 0.2f;
+        [SerializeField] private float cloudDeployRange = 8f;
+        [SerializeField] private float deployCooldown = 6f;
 
         [Header("Movement")]
-        [SerializeField] private float moveSpeed = 2.5f;
+        [SerializeField] private float moveSpeed = 2.2f;
 
         [Header("References")]
-        [SerializeField] private MonoBehaviour authorityProvider;
         [SerializeField] private MonoBehaviour targetProvider;
+        [SerializeField] private MonoBehaviour authorityProvider;
+        [SerializeField] private SporeCloud sporeCloudPrefab;
+        [SerializeField] private Transform cloudSpawnPoint;
         [SerializeField] private ThreatManager threatManager;
 
         [Header("Audio Hooks")]
         [SerializeField] private AudioSource audioSource;
-        [SerializeField] private AudioClip detectedClip;
-        [SerializeField] private AudioClip attackClip;
-        [SerializeField] private AudioClip diedClip;
+        [SerializeField] private AudioClip castClip;
 
-        private IGameAuthority _authority;
         private IEnemyTargetProvider _targetProvider;
+        private IGameAuthority _authority;
         private NavMeshAgent _agent;
         private EnemyState _state = EnemyState.Idle;
-        private float _nextAttackTime;
-        private bool _detectedPlayed;
+        private float _nextDeployTime;
 
         private void Awake()
         {
-            _authority = authorityProvider as IGameAuthority;
             _targetProvider = targetProvider as IEnemyTargetProvider;
+            _authority = authorityProvider as IGameAuthority;
             _agent = GetComponent<NavMeshAgent>();
-
             if (_agent != null)
             {
                 _agent.speed = moveSpeed;
@@ -61,75 +57,43 @@ namespace LethalLike.Gameplay
             {
                 SetState(EnemyState.Idle);
                 StopMove();
-                _detectedPlayed = false;
                 return;
             }
 
             float effectiveDetectRange = detectRange + (threatManager != null ? threatManager.CurrentThreat * detectRangePerThreat : 0f);
             float distance = Vector3.Distance(transform.position, target.transform.position);
-
             if (distance > effectiveDetectRange)
             {
                 SetState(EnemyState.Idle);
                 StopMove();
-                _detectedPlayed = false;
                 return;
             }
 
-            if (!_detectedPlayed)
+            if (distance <= cloudDeployRange && Time.time >= _nextDeployTime)
             {
-                _detectedPlayed = true;
-                PlayClip(detectedClip);
-            }
-
-            if (distance > attackRange)
-            {
-                SetState(EnemyState.Chase);
-                MoveTo(target.transform.position);
-                return;
-            }
-
-            StopMove();
-            if (Time.time < _nextAttackTime)
-            {
+                SetState(EnemyState.Attack);
+                DeployCloud();
+                _nextDeployTime = Time.time + deployCooldown;
                 SetState(EnemyState.Cooldown);
                 return;
             }
 
-            SetState(EnemyState.Attack);
-            _nextAttackTime = Time.time + attackCooldown;
-            TryAttack(target);
+            SetState(EnemyState.Chase);
+            MoveTo(target.transform.position);
         }
 
-        public void NotifyKilled()
+        private void DeployCloud()
         {
-            PlayClip(diedClip);
-        }
-
-        private void TryAttack(PlayerHealth intendedTarget)
-        {
-            if (_authority == null || intendedTarget == null)
+            if (sporeCloudPrefab == null)
             {
                 return;
             }
 
-            Collider[] hitColliders = Physics.OverlapSphere(transform.position, attackRange, attackMask, QueryTriggerInteraction.Ignore);
-            for (int i = 0; i < hitColliders.Length; i++)
-            {
-                if (!hitColliders[i].TryGetComponent(out PlayerHealth hitPlayer))
-                {
-                    hitPlayer = hitColliders[i].GetComponentInParent<PlayerHealth>();
-                }
-
-                if (hitPlayer == null || hitPlayer != intendedTarget)
-                {
-                    continue;
-                }
-
-                PlayClip(attackClip);
-                _authority.TryApplyDamage(hitPlayer, attackDamage);
-                return;
-            }
+            Vector3 spawnPosition = cloudSpawnPoint != null ? cloudSpawnPoint.position : transform.position;
+            Quaternion spawnRotation = cloudSpawnPoint != null ? cloudSpawnPoint.rotation : transform.rotation;
+            SporeCloud cloud = Instantiate(sporeCloudPrefab, spawnPosition, spawnRotation);
+            cloud.gameObject.SetActive(true);
+            PlayClip(castClip);
         }
 
         private void MoveTo(Vector3 targetPosition)
@@ -163,12 +127,6 @@ namespace LethalLike.Gameplay
             {
                 audioSource.PlayOneShot(clip);
             }
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, attackRange);
         }
     }
 }
