@@ -11,16 +11,27 @@ namespace LethalLike.Gameplay
 
         private void Start()
         {
-            if (enemyPrefab == null || spawnPoints.Count == 0)
+            SpawnAdditionalEnemies(spawnCount, limitToSpawnPointCount: true);
+        }
+
+        public void SpawnAdditionalEnemies(int count)
+        {
+            SpawnAdditionalEnemies(count, limitToSpawnPointCount: false);
+        }
+
+        private void SpawnAdditionalEnemies(int count, bool limitToSpawnPointCount)
+        {
+            if (enemyPrefab == null || spawnPoints.Count == 0 || count <= 0)
             {
                 return;
             }
 
-            int count = Mathf.Min(spawnCount, spawnPoints.Count);
-            for (int i = 0; i < count; i++)
+            int targetCount = limitToSpawnPointCount ? Mathf.Min(count, spawnPoints.Count) : count;
+            for (int i = 0; i < targetCount; i++)
             {
+                Transform spawnPoint = limitToSpawnPointCount ? spawnPoints[i] : spawnPoints[Random.Range(0, spawnPoints.Count)];
                 // TODO(coop): move this into NetworkAuthority / server-authoritative flow
-                Instantiate(enemyPrefab, spawnPoints[i].position, spawnPoints[i].rotation);
+                Instantiate(enemyPrefab, spawnPoint.position, spawnPoint.rotation);
             }
         }
     }

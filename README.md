@@ -16,10 +16,14 @@
 - `RoundManager.cs` : Ready/Playing/Ended, 타이머, 종료 사유
 - `RoundStatusUI.cs` : 남은 시간/반납 씨앗 수/점수/사유 텍스트 표시
 - `TeamScoreManager.cs` : 점수/반납 카운트 관리
-- `Seed.cs`, `SeedSpawner.cs` : 씨앗 데이터/스폰
+- `Seed.cs`, `SeedSpawner.cs` : 씨앗 데이터/스폰/위협 이벤트
 - `DropZone.cs` : 반납 트리거
 - `PlayerHealth.cs` : 체력/피격/사망
-- `PlantEnemyAI.cs`, `EnemySpawner.cs` : 적 추적/공격/스폰
+- `PlantEnemyAI.cs`, `EnemySpawner.cs` : 기본 적 추적/타격 판정/스폰
+- `IEnemyTargetProvider.cs`, `FixedEnemyTargetProvider.cs` : 적 타겟 주입
+- `SporeEnemyAI.cs`, `SporeCloud.cs` : 포자 구름 영역 장악 적
+- `AmbushMushroomAI.cs` : 매복 후 급습하는 버섯 적
+- `ThreatManager.cs` : 씨앗 운반 위협도/추가 스폰 압박
 - `XRLocomotionPreset.cs` : 텔레포트 vs 스무스 이동 프리셋
 - `Services/IGameAuthority.cs`, `Services/LocalAuthority.cs`
 - `Services/IReviveService.cs`, `Services/SinglePlayerReviveService.cs`
